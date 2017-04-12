@@ -1,12 +1,77 @@
 // Description: This file works for downloading the data from wikimedia traffic data by using MPI
 //mpicc -g -o getWiki_data getWiki_data.c
-//mpiexec -f hosts -n 16 ./getWiki_data
+//mpiexec -f hosts -n 17 ./getWiki_data
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-//#include <mpi.h>
+#include <mpi.h>
+
+int nnodes;
+int me; // node's rank
+
+void init(int argc, char **argv)
+{
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &nnodes);
+  MPI_Comm_rank(MPI_COMM_WORLD, &me);
+  // n = strtol(argv[1], NULL, 0);
+
+  // if (me == 0)
+  // {
+  //   int i;
+  //   for (i = 0; i<n; i++)
+  //   {
+  //     list[i] = rand() % 6;
+  //     printf("list[i]: %d\n", list[i]);
+  //   }
+  // }
+}
+
+void managernode()
+{
+  MPI_Status status;
+  int i;
+
+  //dividing data among all the nodes except managernode
+  int sub_size = 584/(nnodes-1);
+  int last_sub_size = sub_size;
+  if (584 - (sub_size*(nnodes - 1)) != 0)
+  {
+    last_sub_size = sub_size +  (584 - sub_size*(nnodes - 1));
+  }
+
+  // send share of the downloading dates to worker nodes
+  for (i = 1; i < nnodes-1; i++)
+  {
+    MPI_send (&sub_size, 1, MPI_INT, i, DATA_MSG, MPI_COMM_WORLD);
+  }
+  MPI_send (&last_sub_size, 1, MPI_INT, i, DATA_MSG, MPI_COMM_WORLD);
+}
+
+void workernode()
+{
+  int sub_size; // a buffer that receives the data
+  MPI_Status status;
+
+  //reeive message from manager node
+  MPI_Recv(&sub_size, 1, MPI_INT, 0, DATA_MSG, MPI_COMM_WORLD, &status);
+
+  //do work
+  /*
+  write
+  code
+  from
+  here
+  */
+  // float sub_pi = calculate_pi(sub_size);
+
+  //send result back to manager node
+  // MPI_Send(&sub_pi, 1, MPI_INT, 0, NEWDATA_MSG, MPI_COMM_WORLD);
+}
+
+
 
 int main() {
     //start at 0153.11.9  --> 2007/12/09
