@@ -1,9 +1,12 @@
 // Description: This file works for downloading the data from wikimedia traffic data by using MPI
+//mpicc -g -o getWiki_data getWiki_data.c
+//mpiexec -f hosts -n 16 ./getWiki_data
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+//#include <mpi.h>
 
 int main() {
     //start at 0153.11.9  --> 2007/12/09
@@ -23,7 +26,8 @@ int main() {
 
 
 
-    for (int i = 1; i < 584; i++) {
+    for (int i = 1; i < 584; i++)
+    {
       ptm->tm_year = 0163;
       ptm->tm_mon = 0;
       ptm->tm_mday = i;
@@ -36,11 +40,14 @@ int main() {
       month[2] = '\0';
 
       snprintf(URL_forDay, 82, "https://dumps.wikimedia.org/other/pagecounts-raw/%s/%s-%s/pagecounts-%s", year, year, month, date);
-      for (int j = 0; j < 24; j++) {
-        if (j < 10) {
+      for (int j = 0; j < 24; j++)
+      {
+        if (j < 10)
+        {
           snprintf(Download_gz_URL, 100, "%s-0%d0000.gz", URL_forDay, j);
         }
-        else {
+        else
+        {
           snprintf(Download_gz_URL, 100, "%s-%d0000.gz", URL_forDay, j);
         }
         memcpy(&nameOfGZ, &Download_gz_URL[62], 26);
