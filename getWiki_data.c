@@ -22,7 +22,7 @@ void init(int argc, char **argv)
   MPI_Comm_rank(MPI_COMM_WORLD, &me);
 }
 
-void managernode()
+void managernode_DistWork()
 {
   MPI_Status status;
   int i;
@@ -45,11 +45,7 @@ void managernode()
   // printf("caooooooooooooooo %d\n", last_sub_size[0]);
   last_sub_size[1] = 0;
   last_sub_size[2] = 0;
-
-
   // printf("Rank: %d: list looks like: %d, %d, %d \n", me, sub_size[0], sub_size[1], sub_size[2]);
-
-
   // send share of the downloading dates to worker nodes
   for (i = 1; i < nnodes-1; i++)
   {
@@ -69,10 +65,18 @@ void workernode()
   // int* sub_size; // a buffer that receives the data
   // sub_size = malloc(3*sizeof(int));
   MPI_Status status;
-
+  int cmd;
+  //char file[30];
   //reeive message from manager node
   MPI_Recv(&recv_buff, 3, MPI_INT, 0, DATA_MSG, MPI_COMM_WORLD, &status);
   printf("Rank: %d: list looks like: %d, %d, %d\n ", me, recv_buff[0], recv_buff[1], recv_buff[2]);
+  if (me == 2) {
+    system("wget https://dumps.wikimedia.org/other/pagecounts-raw/2007/2007-12/pagecounts-20071210-200000.gz -P /tmp/WikiData/");
+
+  }
+  if (me == 3) {
+    system("wget https://dumps.wikimedia.org/other/pagecounts-raw/2007/2007-12/pagecounts-20071210-210000.gz -P /tmp/WikiData/");
+  }
   //do work
   /*
   write
@@ -91,12 +95,10 @@ int main(int argc, char** argv)
   int i;
   init(argc, argv);
   // printf("rank: %d\n", me);
-
-
   if (me == 0)
   {
     printf("rankkkkkkkkkkkkk: %d\n", me);
-    managernode();
+    managernode_DistWork();
   }
   else
   {
@@ -130,8 +132,8 @@ int main() {
     int end = 3;
 
     system("mkdir /tmp/WikiData");  //Create WikiData directory
-    //584
-    for (int i = start; i < end; i++)
+    //583 --> since we r doing inclsive bound
+    for (int i = start; i <= end; i++)
     {
       ptm->tm_year = 0163;
       ptm->tm_mon = 0;
