@@ -117,54 +117,67 @@ int main() {
     char date[9];
     time_t t = time(NULL);
     struct tm * ptm = gmtime(&t);
+
     char year[4];
     char month[2];
+
     char nameOfGZ[26];
     char URL_forDay[82];
     char Download_gz_URL[100];
-    char wgetCommand[154];
-    char unZipCommand[114];
-    char RemoveCommand[114];
 
-s
+    char MakeDir[28];
+    char wgetCommand[122];
+    //char unZipCommand[114];
+    //char RemoveCommand[114];
 
-    for (int i = 1; i < 584; i++)
+    int start = 2;
+    int end = 3;
+
+    system("mkdir /tmp/WikiData");  //Create WikiData directory
+    //584
+    for (int i = start; i < end; i++)
     {
       ptm->tm_year = 0163;
       ptm->tm_mon = 0;
       ptm->tm_mday = i;
       mktime(ptm);
       strftime(date, 9, "%Y%m%d", ptm);
-
       memcpy(&year, &date[0], 4);
       year[4] = '\0';
       memcpy(&month, &date[4], 2);
       month[2] = '\0';
-
       snprintf(URL_forDay, 82, "https://dumps.wikimedia.org/other/pagecounts-raw/%s/%s-%s/pagecounts-%s", year, year, month, date);
-      for (int j = 0; j < 24; j++)
-      {
-        if (j < 10)
-        {
+      snprintf(MakeDir, 28, "mkdir /tmp/WikiData/%s-%s", year, month);
+
+      system(MakeDir);
+
+      printf("%s\n", URL_forDay);
+      for (int j = 0; j < 5; j++) {
+        if (j < 10) {
           snprintf(Download_gz_URL, 100, "%s-0%d0000.gz", URL_forDay, j);
         }
-        else
-        {
+        else {
           snprintf(Download_gz_URL, 100, "%s-%d0000.gz", URL_forDay, j);
         }
         memcpy(&nameOfGZ, &Download_gz_URL[62], 26);
-        nameOfGZ[26] = '\0';
+        nameOfGZ[26] = '\0';  //get name of the
 
-
-        snprintf(wgetCommand, 154, "wget %s |hdfs dfs -put %s.gz ./WikiData/", Download_gz_URL, nameOfGZ);
-        snprintf(unZipCommand, 114, "hadoop fs -text ./WikiData/%s.gz | hadoop fs -put - ./WikiData/%s", nameOfGZ, nameOfGZ);
-
+        snprintf(wgetCommand, 154, "wget %s -P /tmp/WikiData/%s-%s", Download_gz_URL, year, month);
         system(wgetCommand);
-        system(unZipCommand);
-      }
-      system("hdfs dfs -rm ./Wikidata/*.gz");
 
+      }
+
+
+      //for slave nodes to run HADOOP DOESN'T RUN THESE COMMANDS
+      //snprintf(unZipCommand, 114, "hadoop fs -text ./WikiData/%s.gz | hadoop fs -put - ./WikiData/%s", nameOfGZ, nameOfGZ);
+      //system(unZipCommand);
     }
+    system("scp -r /tmp/WikiData/ valdiv_n1@hadoop2.mathsci.denison.edu:/users/valdiv_n1/CS345/Hadoop/Wiki_Data");
+    //system("rm -r /tmp/WikiData/")
+    //MASTER in a separete forloop
+    // if rank == 0
+    // system("hdfs dfs -put ~/CS345/Hadoop/Wiki_Data/ .")
     return 0;
 }
+
 */
