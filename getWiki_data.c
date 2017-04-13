@@ -8,6 +8,9 @@
 #include <time.h>
 #include <mpi.h>
 
+#define DATA_MSG 0
+#define NEWDATA_MSG 1
+
 int nnodes;
 int me; // node's rank
 
@@ -35,29 +38,45 @@ void managernode()
   int i;
 
   //dividing data among all the nodes except managernode
-  int sub_size = 584/(nnodes-1);
-  int last_sub_size = sub_size;
-  if (584 - (sub_size*(nnodes - 1)) != 0)
-  {
-    last_sub_size = sub_size +  (584 - sub_size*(nnodes - 1));
-  }
+  //sub_size[0] = size
+  //sub_size[1] = start number
+  //sub_size[1] = end number
+
+  int* sub_size;
+  sub_size = malloc(3*sizeof(int));
+  sub_size[0] = 584/(nnodes-1);
+
+  int* last_sub_size;
+  last_sub_size = malloc(3*sizeof(int));
+  last_sub_size[0] = sub_size[0] + (584 - sub_size[0]*(nnodes-1));
+
+  // int last_sub_size = sub_size;
+  // if (584 - (sub_size*(nnodes - 1)) != 0)
+  // {
+  //   last_sub_size = sub_size +  (584 - sub_size*(nnodes - 1));
+  // }
 
   // send share of the downloading dates to worker nodes
   for (i = 1; i < nnodes-1; i++)
   {
-    MPI_send (&sub_size, 1, MPI_INT, i, DATA_MSG, MPI_COMM_WORLD);
+    sub_size[1] = (i-1)*sub_size[0]+1;
+    sub_size[2] = i*sub_size[0];
+    MPI_Send (&sub_size, 3, MPI_INT, i, DATA_MSG, MPI_COMM_WORLD);
   }
-  MPI_send (&last_sub_size, 1, MPI_INT, i, DATA_MSG, MPI_COMM_WORLD);
+  last_sub_size[1] = (i-1)*sub_size[0]+1;
+  last_sub_size[2] = last_sub_size[1] + last_sub_size[0];
+  MPI_Send (&last_sub_size, 3, MPI_INT, i, DATA_MSG, MPI_COMM_WORLD);
 }
 
 void workernode()
 {
-  int sub_size; // a buffer that receives the data
+  int* sub_size; // a buffer that receives the data
+  sub_size = malloc(3*sizeof(int));
   MPI_Status status;
 
   //reeive message from manager node
-  MPI_Recv(&sub_size, 1, MPI_INT, 0, DATA_MSG, MPI_COMM_WORLD, &status);
-
+  MPI_Recv(&sub_size, 3, MPI_INT, 0, DATA_MSG, MPI_COMM_WORLD, &status);
+  printf("Rank: %d: list looks like: list[%d], list[%d], list[%d] ", me, sub_size[0], sub_size[1], sub_size[2]);
   //do work
   /*
   write
@@ -71,8 +90,26 @@ void workernode()
   // MPI_Send(&sub_pi, 1, MPI_INT, 0, NEWDATA_MSG, MPI_COMM_WORLD);
 }
 
+int main(int argc, char** argv)
+{
+  int i;
+  init(argc, argv);
+  // printf("rank: %d\n", me);
 
 
+  if (me == 0)
+  {
+    printf("rankkkkkkkkkkkkk: %d\n", me);
+    managernode();
+  }
+  else
+  {
+    workernode();
+  }
+  MPI_Finalize();
+}
+
+/*
 int main() {
     //start at 0153.11.9  --> 2007/12/09
     //2015   --> 0163.0.1
@@ -89,7 +126,7 @@ int main() {
     char unZipCommand[114];
     char RemoveCommand[114];
 
-
+s
 
     for (int i = 1; i < 584; i++)
     {
@@ -130,3 +167,4 @@ int main() {
     }
     return 0;
 }
+*/
