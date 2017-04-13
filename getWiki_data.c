@@ -13,23 +13,13 @@
 
 int nnodes;
 int me; // node's rank
+int recv_buff[3];
 
 void init(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &nnodes);
   MPI_Comm_rank(MPI_COMM_WORLD, &me);
-  // n = strtol(argv[1], NULL, 0);
-
-  // if (me == 0)
-  // {
-  //   int i;
-  //   for (i = 0; i<n; i++)
-  //   {
-  //     list[i] = rand() % 6;
-  //     printf("list[i]: %d\n", list[i]);
-  //   }
-  // }
 }
 
 void managernode()
@@ -41,42 +31,48 @@ void managernode()
   //sub_size[0] = size
   //sub_size[1] = start number
   //sub_size[1] = end number
-
-  int* sub_size;
-  sub_size = malloc(3*sizeof(int));
+  // int* sub_size;
+  // sub_size = malloc(3*sizeof(int));
+  int sub_size[3];
   sub_size[0] = 584/(nnodes-1);
+  sub_size[1] = 0;
+  sub_size[2] = 0;
 
-  int* last_sub_size;
-  last_sub_size = malloc(3*sizeof(int));
+  // int* last_sub_size;
+  // last_sub_size = malloc(3*sizeof(int));
+  int last_sub_size[3];
   last_sub_size[0] = sub_size[0] + (584 - sub_size[0]*(nnodes-1));
+  // printf("caooooooooooooooo %d\n", last_sub_size[0]);
+  last_sub_size[1] = 0;
+  last_sub_size[2] = 0;
 
-  // int last_sub_size = sub_size;
-  // if (584 - (sub_size*(nnodes - 1)) != 0)
-  // {
-  //   last_sub_size = sub_size +  (584 - sub_size*(nnodes - 1));
-  // }
+
+  // printf("Rank: %d: list looks like: %d, %d, %d \n", me, sub_size[0], sub_size[1], sub_size[2]);
+
 
   // send share of the downloading dates to worker nodes
   for (i = 1; i < nnodes-1; i++)
   {
     sub_size[1] = (i-1)*sub_size[0]+1;
     sub_size[2] = i*sub_size[0];
+    // printf("Rank: %d: list looks like: %d, %d, %d \n", me, sub_size[0], sub_size[1], sub_size[2]);
     MPI_Send (&sub_size, 3, MPI_INT, i, DATA_MSG, MPI_COMM_WORLD);
   }
   last_sub_size[1] = (i-1)*sub_size[0]+1;
-  last_sub_size[2] = last_sub_size[1] + last_sub_size[0];
+  last_sub_size[2] = last_sub_size[1] + last_sub_size[0]-1;
+  // printf("Rank: %d: list looks like: %d, %d, %d \n", me, last_sub_size[0], last_sub_size[1], last_sub_size[2]);
   MPI_Send (&last_sub_size, 3, MPI_INT, i, DATA_MSG, MPI_COMM_WORLD);
 }
 
 void workernode()
 {
-  int* sub_size; // a buffer that receives the data
-  sub_size = malloc(3*sizeof(int));
+  // int* sub_size; // a buffer that receives the data
+  // sub_size = malloc(3*sizeof(int));
   MPI_Status status;
 
   //reeive message from manager node
-  MPI_Recv(&sub_size, 3, MPI_INT, 0, DATA_MSG, MPI_COMM_WORLD, &status);
-  printf("Rank: %d: list looks like: list[%d], list[%d], list[%d] ", me, sub_size[0], sub_size[1], sub_size[2]);
+  MPI_Recv(&recv_buff, 3, MPI_INT, 0, DATA_MSG, MPI_COMM_WORLD, &status);
+  printf("Rank: %d: list looks like: %d, %d, %d\n ", me, recv_buff[0], recv_buff[1], recv_buff[2]);
   //do work
   /*
   write
