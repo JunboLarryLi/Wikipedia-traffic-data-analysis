@@ -15,15 +15,13 @@ int nnodes;
 int me; // node's rank
 int recv_buff[3];
 
-void init(int argc, char **argv)
-{
+void init(int argc, char **argv) {
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &nnodes);
   MPI_Comm_rank(MPI_COMM_WORLD, &me);
 }
 
-void managernode_DistWork()
-{
+void managernode_DistWork() {
   MPI_Status status;
   int i;
 
@@ -58,6 +56,38 @@ void managernode_DistWork()
   last_sub_size[2] = last_sub_size[1] + last_sub_size[0]-1;
   // printf("Rank: %d: list looks like: %d, %d, %d \n", me, last_sub_size[0], last_sub_size[1], last_sub_size[2]);
   MPI_Send (&last_sub_size, 3, MPI_INT, i, DATA_MSG, MPI_COMM_WORLD);
+
+}
+
+void MasterPutHDFS() {
+  MPI_Status status;
+  const char *a[17];
+  a[0]="219a";
+  a[1]="219b";
+  a[2]="219c";
+  a[3]="219d";
+  a[4]="219e";
+  a[5]="219f";
+  a[6]="219g";
+  a[7]="219h";
+  a[8]="219i";
+  a[9]="219j";
+  a[10]="219k";
+  a[11]="219l";
+  a[12]="219n";
+  a[13]="219o";
+  a[14]="219p";
+  a[15]="216g";
+  a[16]="216f";
+
+  int i;
+  //system("mkdir /tmp/WikiData");
+  //forloop from 1-16 missing 17
+  for (i = 0; i < nnodes; i++) {
+      printf("HELLOO this is %s\n", a[i]);/*
+      system("scp -r valdiv_n1@219a.mathsci.denison.edu:/tmp/WikiData/ /tmp/WikiData/");
+      system("hdfs dfs -put /tmp/WikiData/ .");*/
+  }
 }
 
 void workernode()
@@ -69,14 +99,17 @@ void workernode()
   //char file[30];
   //reeive message from manager node
   MPI_Recv(&recv_buff, 3, MPI_INT, 0, DATA_MSG, MPI_COMM_WORLD, &status);
-  printf("Rank: %d: list looks like: %d, %d, %d\n ", me, recv_buff[0], recv_buff[1], recv_buff[2]);
-  if (me == 2) {
-    system("wget https://dumps.wikimedia.org/other/pagecounts-raw/2007/2007-12/pagecounts-20071210-200000.gz -P /tmp/WikiData/");
+
+  int start = recv_buff[1];
+  int end = recv_buff[2];
+
+  printf("Rank: %d: list looks like: %d, %d, %d\n ", me, recv_buff[0], start, end);
+/*  if (me == 2) {
+    system("wget https://dumps.wikimedia.org/other/pagecounts-raw/2007/2007-12/pagecounts-20071209-180000.gz -P /tmp/WikiData/");
+    system("wget https://dumps.wikimedia.org/other/pagecounts-raw/2007/2007-12/pagecounts-20071209-190000.gz -P /tmp/WikiData/");
 
   }
-  if (me == 3) {
-    system("wget https://dumps.wikimedia.org/other/pagecounts-raw/2007/2007-12/pagecounts-20071210-210000.gz -P /tmp/WikiData/");
-  }
+*/
   //do work
   /*
   write
@@ -104,10 +137,27 @@ int main(int argc, char** argv)
   {
     workernode();
   }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if (me == 0) {
+    MasterPutHDFS();
+  }
+
   MPI_Finalize();
 }
 
 /*
+// Description: This file works for downloading the data from wikimedia traffic data by using MPI
+//mpicc -g -o getWiki_data getWiki_data.c
+//mpiexec -f hosts -n 16 ./getWiki_data
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <time.h>
+//#include <mpi.h>
+
 int main() {
     //start at 0153.11.9  --> 2007/12/09
     //2015   --> 0163.0.1
@@ -132,8 +182,8 @@ int main() {
     int end = 3;
 
     system("mkdir /tmp/WikiData");  //Create WikiData directory
-    //583 --> since we r doing inclsive bound
-    for (int i = start; i <= end; i++)
+    //584
+    for (int i = start; i < end; i++)
     {
       ptm->tm_year = 0163;
       ptm->tm_mon = 0;
@@ -170,12 +220,11 @@ int main() {
       //snprintf(unZipCommand, 114, "hadoop fs -text ./WikiData/%s.gz | hadoop fs -put - ./WikiData/%s", nameOfGZ, nameOfGZ);
       //system(unZipCommand);
     }
-    system("scp -r /tmp/WikiData/ valdiv_n1@hadoop2.mathsci.denison.edu:/users/valdiv_n1/CS345/Hadoop/Wiki_Data");
+    //system("scp -r /tmp/WikiData/ valdiv_n1@hadoop2.mathsci.denison.edu:/users/valdiv_n1/CS345/Hadoop/Wiki_Data");
     //system("rm -r /tmp/WikiData/")
     //MASTER in a separete forloop
     // if rank == 0
     // system("hdfs dfs -put ~/CS345/Hadoop/Wiki_Data/ .")
     return 0;
 }
-
 */
