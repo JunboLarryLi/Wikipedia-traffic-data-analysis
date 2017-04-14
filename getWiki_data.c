@@ -76,7 +76,7 @@ void MasterPutHDFS() {
   a[16]="216f";
 
   int i;
-  cmd = system("mkdir /tmp/Wiki_Data");
+  cmd = system("mkdir /tmp/Wiki_Data"); //make a directory in haoop2, where all operations happen here
   //forloop from 1-16 missing 17
   for (i = 0; i < nnodes; i++) {
     snprintf(slaveToMaster, 73, "scp -r %s:/tmp/WikiData/ /tmp/Wiki_Data/", a[i]);
@@ -92,10 +92,10 @@ void MasterPutHDFS() {
     cmd = system("hdfs dfs -put /tmp/Wiki_Data/WikiData ./Wiki_Data/");  //move data to HDFS
 
     printf("Removing Data from Hadoop......\n");
-    cmd = system("rm -r /tmp/Wiki_Data/WikiData");
+    cmd = system("rm -r /tmp/Wiki_Data/WikiData"); //erase data from master hadoop2
 
   }
-  cmd = system("rm -r /tmp/Wiki_Data");
+  cmd = system("rm -r /tmp/Wiki_Data"); //delete this project directory from hadoop2
 }
 
 void workernode()
