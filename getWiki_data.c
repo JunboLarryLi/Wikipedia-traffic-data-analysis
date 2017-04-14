@@ -122,41 +122,40 @@ void workernode()
 
   //reeive message from manager node
   MPI_Recv(&recv_buff, 3, MPI_INT, 0, DATA_MSG, MPI_COMM_WORLD, &status);
-  if (me != 1) {
-    start = recv_buff[1];
-    end = recv_buff[2];
 
-  //  printf("Rank: %d: list looks like: %d, %d, %d\n ", me, recv_buff[0], start, end);
-    cmd = system("mkdir /tmp/WikiData");  //Create WikiData directory
+  start = recv_buff[1];
+  end = recv_buff[2];
 
-    //584
-    //first run 17, second run 104
-    for (i = start; i <= end; i++)
-    {
-      ptm->tm_year = 0163;
-      ptm->tm_mon = 0;
-      ptm->tm_mday = 16 + i;
-      mktime(ptm);
-      strftime(date, 9, "%Y%m%d", ptm);
-      memcpy(&year, &date[0], 4);
-      year[4] = '\0';
-      memcpy(&month, &date[4], 2);
-      month[2] = '\0';
-      snprintf(URL_forDay, 82, "https://dumps.wikimedia.org/other/pagecounts-raw/%s/%s-%s/pagecounts-%s", year, year, month, date);
-      snprintf(MakeDir, 28, "mkdir /tmp/WikiData/%s-%s", year, month);
+//  printf("Rank: %d: list looks like: %d, %d, %d\n ", me, recv_buff[0], start, end);
+  cmd = system("mkdir /tmp/WikiData");  //Create WikiData directory
 
-      cmd = system(MakeDir);
-      for (j = 0; j < 24; j++) {
-        if (j < 10) {
-          snprintf(Download_gz_URL, 100, "%s-0%d0000.gz", URL_forDay, j);
-        }
-        else {
-          snprintf(Download_gz_URL, 100, "%s-%d0000.gz", URL_forDay, j);
-        }
-        snprintf(wgetCommand, 122, "wget %s -P /tmp/WikiData/%s-%s", Download_gz_URL, year, month);
-        cmd = system(wgetCommand);
+  //584
+  //first run 17, second run 104 + 17
+  for (i = start; i <= end; i++)
+  {
+    ptm->tm_year = 0163;
+    ptm->tm_mon = 0;
+    ptm->tm_mday = 16 + i;
+    mktime(ptm);
+    strftime(date, 9, "%Y%m%d", ptm);
+    memcpy(&year, &date[0], 4);
+    year[4] = '\0';
+    memcpy(&month, &date[4], 2);
+    month[2] = '\0';
+    snprintf(URL_forDay, 82, "https://dumps.wikimedia.org/other/pagecounts-raw/%s/%s-%s/pagecounts-%s", year, year, month, date);
+    snprintf(MakeDir, 28, "mkdir /tmp/WikiData/%s-%s", year, month);
 
+    cmd = system(MakeDir);
+    for (j = 0; j < 24; j++) {
+      if (j < 10) {
+        snprintf(Download_gz_URL, 100, "%s-0%d0000.gz", URL_forDay, j);
       }
+      else {
+        snprintf(Download_gz_URL, 100, "%s-%d0000.gz", URL_forDay, j);
+      }
+      snprintf(wgetCommand, 122, "wget %s -P /tmp/WikiData/%s-%s", Download_gz_URL, year, month);
+      cmd = system(wgetCommand);
+
     }
   }
 }
