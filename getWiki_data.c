@@ -24,7 +24,7 @@ void init(int argc, char **argv) {
 void managernode_DistWork() {
   MPI_Status status;
   int i, days;
-  days = 104;
+  days = 245;
   //dividing data among all the nodes except managernode
   //sub_size[0] = size
   //sub_size[1] = start number
@@ -128,14 +128,13 @@ void workernode()
 
 //  printf("Rank: %d: list looks like: %d, %d, %d\n ", me, recv_buff[0], start, end);
   cmd = system("mkdir /tmp/WikiData");  //Create WikiData directory
-
   //584
   //first run 17, second run 104 + 17
   for (i = start; i <= end; i++)
   {
     ptm->tm_year = 0163;
     ptm->tm_mon = 0;
-    ptm->tm_mday = 16 + i;
+    ptm->tm_mday = 120 + i;
     mktime(ptm);
     strftime(date, 9, "%Y%m%d", ptm);
     memcpy(&year, &date[0], 4);
@@ -164,10 +163,8 @@ int main(int argc, char** argv)
 {
   int i;
   init(argc, argv);
-  /*
-  master: Distribute file range.
-  slaves: Get files
-  */
+  /*  master: Distribute file range.
+      slaves: Get files */
   if (me == 0) {
     printf("I am the Master of rank: %d\n", me);
     managernode_DistWork();
