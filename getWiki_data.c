@@ -125,8 +125,7 @@ void workernode()
 
   start = recv_buff[1];
   end = recv_buff[2];
-
-//  printf("Rank: %d: list looks like: %d, %d, %d\n ", me, recv_buff[0], start, end);
+  // printf("Rank: %d: list looks like: %d, %d, %d\n ", me, recv_buff[0], start, end);
   cmd = system("mkdir /tmp/WikiData");  //Create WikiData directory
   //584
   //first run 17, second run 104 + 17
@@ -167,7 +166,7 @@ int main(int argc, char** argv)
       slaves: Get files */
   if (me == 0) {
     printf("I am the Master of rank: %d\n", me);
-    managernode_DistWork();
+    //managernode_DistWork();
   } else {
     workernode();
   }
