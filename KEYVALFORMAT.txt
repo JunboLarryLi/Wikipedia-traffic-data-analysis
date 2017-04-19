@@ -15,7 +15,8 @@ input: file1
 output: <yymmddhh, lang\t name\t views\t bytes>
 
 RECUDER:
-
+input: <yymmddhh, lang\t name\t views\t bytes>
+output: file 2
 
 
 
