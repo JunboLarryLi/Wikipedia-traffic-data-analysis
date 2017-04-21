@@ -1,6 +1,6 @@
-// Description: This file works for downloading the data from wikimedia traffic data by using MPI
+// Description: This file is used for downloading missing dates. (NO MPI INVOLVED HERE)
 //gcc CURATE_DAY.c -o CURATE_DAY -std=c99
-//./CURATE_DAY m d hr
+//./CURATE_DAY
 
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +12,7 @@ int cmd;
 void PutHDFS()
 {
   printf("Moving from Hadoop to HDFS......\n");
-  cmd = system("hdfs dfs -put /tmp/WikiData ./Wiki_Data/");  //move data to HDFS
+  cmd = system("hdfs dfs -put /tmp/WikiData /user/valdiv_n1/Wiki_Data/");  //move data to HDFS
 
   printf("Removing Data from Hadoop......\n");
   cmd = system("rm -r /tmp/WikiData");
@@ -65,16 +65,11 @@ void workernode(int mon, int day, int st_hr, int end_hr)
 
 int main(int argc, char** argv)
 {
+  printf("Start!\n");
   workernode(8, 17, 6, 23);
   PutHDFS();
   workernode(8, 18, 0, 5);
   PutHDFS();
-  workernode(10,28, 0, 23);
-  PutHDFS();
-  workernode(10, 29, 0, 23);
-  PutHDFS();
-  workernode(10, 30, 0, 23);
-  PutHDFS();
-  workernode(10, 31, 0, 23);
+  workernode(10, 28, 0, 23);
   PutHDFS();
 }
