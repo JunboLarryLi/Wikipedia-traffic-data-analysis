@@ -21,8 +21,6 @@ package edu.denison.cs345.wikileatics;
 
 import java.io.IOException;
 import java.util.*;
-import java.lang.Math;
-import java.util.*;
 import java.net.*;
 import java.io.*;
 import org.apache.hadoop.fs.Path;
@@ -44,9 +42,7 @@ public class WikiLeatics {
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException
         {
             String line;
-
             line = value.toString();           //Convert a line to string
-
             //====================== Split information in a line by whitespace characters into a list ============================
             String name, views, dateHR, bytes, LineList[], Line[];
 
@@ -67,53 +63,73 @@ public class WikiLeatics {
              * cllimit = 5            --> only the first 5 categories
              */
             //in a line of the input file we extract the name:
-            String sentence, cat, _cat, page_id, title_idx, entry, _value;
+            String sentence, cat, _cat, page_id, title_idx, entry, _value, urlCmd, notHidden;
             sentence = "";
             cat = "<categories>";
             _cat = "</categories>";
             page_id = "<page _idx=\"";
             title_idx = "title=\"Category:";
             //CONSTANT String the indicates the entry of the API
-            entry = "https://en.wikipedia.org//w/api.php?";
+            notHidden = "&clshow=!hidden&cllimit=5";
 
             try {
                //Complete URL that indicates the action we need from the WikiMedia DB:
-               URL url = new URL(entry + "action=query&format=xml&prop=categories&titles="+ name +"&clshow=!hidden&cllimit=5");
+               URL url = new URL("https://en.wikipedia.org//w/api.php?action=query&format=xml&prop=categories&titles=" + name + notHidden);
                Scanner s = new Scanner(url.openStream());
                s.useDelimiter("\\n");
                sentence = s.next();
                //========== index of the start and end of the page index =============
                int s_indx, e_indx;
-               s_indx = sentence.indexOf(page_id) + page_id.length();
-               e_indx = sentence.indexOf("\"", s_indx);
-               String idx = sentence.substring(s_indx, e_indx);
+               s_indx = sentence.indexOf(page_id);
 
-               int indexNumber = Integer.parseInt(idx);
-               if (indexNumber != -1) {
+               if (s_indx != -1) // check if the XML containd page _idx.
+               {
+                 s_indx += page_id.length();
+                 e_indx = sentence.indexOf("\"", s_indx);
+                 String idx = sentence.substring(s_indx, e_indx);
+                 //  int indexNumber = Integer.parseInt(try_it);
+                 String negtive_one = "-1";
+                 if (!idx.equals(negtive_one))   // check if page _idx != -1 --> if it is a valid page
+                 {
                    //========== index of the start and end of the Category List ==========
                    int s_cat, e_cat;
-                   s_cat = sentence.lastIndexOf(cat) + cat.length();
-                   e_cat = sentence.indexOf(_cat);
-                   String categories = sentence.substring(s_cat, e_cat);
-                   //====================== Split information in a line by whitespace characters into a list ============================
-                   String categoryList = "";
-                   int s_title = 1;
-                   int e_title = 1;
-                   for (int i = 0; i < 5; i++) {
-                     s_title = categories.indexOf(title_idx, e_title) + title_idx.length();
-                     e_title = categories.indexOf("\"", s_title);
-                     String category = categories.substring(s_title, e_title);
-                     categoryList += (category + "\t");
+                   s_cat = sentence.lastIndexOf(cat);
+                   if (s_cat != -1)     // checks whether the valid page has categories
+                   {
+                     s_cat += cat.length();
+                     e_cat = sentence.indexOf(_cat);
+                     String categories = sentence.substring(s_cat, e_cat);
+                     //====================== Split information in a line by whitespace characters into a list ============================
+                     String categoryList = "";
+                     int s_title = 1;
+                     int e_title = 1;
+                     int flag = 0;
+                     while(flag != -1) // Iterates through the categories --> if it has less than 5 jumps out.
+                     {
+                       flag = categories.indexOf(title_idx, e_title);
+                       if (flag != -1) {
+                         s_title = flag + title_idx.length();
+                         e_title = categories.indexOf("\"", s_title);
+                         String category = categories.substring(s_title, e_title);
+                         categoryList += (category + "\t");
+                       }
+                     }
+
+                     _value = categoryList + views + "\t" + bytes;
+                     //  set KET and VALUE
+                     KEY.set(dateHR);
+                     VALUE.set(_value);
+                     //COMMIT KET and VALUE
+                     context.write(KEY, VALUE);
                    }
+                 }
+               }
+              // KEY.set(dateHR);
+              // VALUE.set(idx);
+              //
+              // //COMMIT KET and VALUE
+              // context.write(KEY, VALUE);
 
-                   _value = categoryList + views + "\t" + bytes;
-                   //set KET and VALUE
-                   KEY.set(dateHR);
-                   VALUE.set(_value);
-
-                   //COMMIT KET and VALUE
-                   context.write(KEY, VALUE);
-              }
             }
             catch(IOException ex) {
                ex.printStackTrace(); // for now, simply output it.
