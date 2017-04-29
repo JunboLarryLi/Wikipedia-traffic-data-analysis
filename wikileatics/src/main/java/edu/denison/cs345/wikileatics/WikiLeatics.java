@@ -82,7 +82,7 @@ public class WikiLeatics {
                int s_indx, e_indx;
                s_indx = sentence.indexOf(page_id);
 
-               if (s_indx != -1) // check if the XML containd page _idx.
+               if (s_indx != -1) // check if the XML contains page _idx.
                {
                  s_indx += page_id.length();
                  e_indx = sentence.indexOf("\"", s_indx);
@@ -98,29 +98,33 @@ public class WikiLeatics {
                    {
                      s_cat += cat.length();
                      e_cat = sentence.indexOf(_cat);
-                     String categories = sentence.substring(s_cat, e_cat);
-                     //====================== Split information in a line by whitespace characters into a list ============================
-                     String categoryList = "";
-                     int s_title = 1;
-                     int e_title = 1;
-                     int flag = 0;
-                     while(flag != -1) // Iterates through the categories --> if it has less than 5 jumps out.
-                     {
-                       flag = categories.indexOf(title_idx, e_title);
-                       if (flag != -1) {
-                         s_title = flag + title_idx.length();
-                         e_title = categories.indexOf("\"", s_title);
-                         String category = categories.substring(s_title, e_title);
-                         categoryList += (category + "\t");
-                       }
-                     }
 
-                     _value = categoryList + views + "\t" + bytes;
-                     //  set KET and VALUE
-                     KEY.set(dateHR);
-                     VALUE.set(_value);
-                     //COMMIT KET and VALUE
-                     context.write(KEY, VALUE);
+                     if (e_cat < sentence.length())
+                     {
+                       String categories = sentence.substring(s_cat, e_cat);
+                       //====================== Split information in a line by whitespace characters into a list ============================
+                       String categoryList = "";
+                       int s_title = 1;
+                       int e_title = 1;
+                       int flag = 0;
+                       while(flag != -1) // Iterates through the categories --> if it has less than 5 jumps out.
+                       {
+                         flag = categories.indexOf(title_idx, e_title);
+                         if (flag != -1) {
+                           s_title = flag + title_idx.length();
+                           e_title = categories.indexOf("\"", s_title);
+                           String category = categories.substring(s_title, e_title);
+                           categoryList += (category + "\t");
+                         }
+                       }
+
+                       _value = categoryList + views + "\t" + bytes;
+                       //  set KET and VALUE
+                       KEY.set(dateHR);
+                       VALUE.set(_value);
+                       //COMMIT KET and VALUE
+                       context.write(KEY, VALUE);
+                     }
                    }
                  }
                }
