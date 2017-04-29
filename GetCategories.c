@@ -21,34 +21,66 @@ void init(int argc, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &me);
 }
 
-void managernode_DistWork() {
+void Manger_DistributeWork() {
   MPI_Status status;
-  int i, days;
-  days = 245;
-  //dividing data among all the nodes except managernode
-  //sub_size[0] = size
-  //sub_size[1] = start number
-  //sub_size[1] = end number
-  int sub_size[3];
-  sub_size[0] = days/(nnodes-1);
-  sub_size[1] = 0;
-  sub_size[2] = 0;
+  const char * a[12];
+  const char * dirs[12];
 
-  int last_sub_size[3];
-  last_sub_size[0] = sub_size[0] + (days - sub_size[0]*(nnodes-1));
-  last_sub_size[1] = 0;
-  last_sub_size[2] = 0;
-  // send share of the downloading dates to worker nodes
-  for (i = 1; i < nnodes-1; i++) {
-    sub_size[1] = (i-1)*sub_size[0]+1;
-    sub_size[2] = i*sub_size[0];
-    MPI_Send (&sub_size, 3, MPI_INT, i, DATA_MSG, MPI_COMM_WORLD);
+  a[0]="219a";
+  a[1]="219b";
+  a[2]="219c";
+  a[3]="219d";
+  a[4]="219e";
+  a[5]="219f";
+  a[6]="219g";
+  a[7]="219h";
+  a[8]="219i";
+  a[9]="219j";
+  a[10]="219k";
+  a[11]="219l";
+
+  dirs[0]="2015-01";
+  dirs[1]="2015-02";
+  dirs[2]="2015-03";
+  dirs[3]="2015-04";
+  dirs[4]="2015-05";
+  dirs[5]="2015-06";
+  dirs[6]="2015-07";
+  dirs[7]="2015-08";
+  dirs[8]="2015-09";
+  dirs[9]="2015-10";
+  dirs[10]="2015-11";
+  dirs[11]="2015-12";
+
+  int i;
+
+  char getThisMonth[62];
+  char makeDir[30];
+  char MasterToslaveTmp[48];
+  char rmMasterTmpData[29];
+
+  printf("Hello, I am hadoop2. I am making a directory in Tmp.....\n");
+  cmd = system("mkdir /tmp/ThisMonth"); //make a directory in haoop2, where all operations happen here
+
+  for (i = 0; i < nnodes-1; i++)
+  {
+    printf("Hadoop2: Getting %s from HDFS......\n", dirs[i]);
+    snprintf(getThisMonth, 62, "hdfs dfs -get /user/valdiv_n1/cleanWiki/%s /tmp/ThisMonth", dirs[i]);
+    cmd = system(getThisMonth);  //move data to hadoop2
+    //**********************************
+    printf("%s: Creating Dir in tmp......\n", a[i]);
+    snprintf(makeDir, 30, "ssh %s 'mkdir /tmp/MyMonth'" , a[i]);
+    cmd = system(makeDir);    //copy data to Hadoop2
+    //**********************************
+    printf("Hadoop2: Sending data to %s......\n", a[i]);
+    snprintf(MasterToslaveTmp, 48, "scp -r /tmp/ThisMonth/%s %s:/tmp/MyMonth/",dirs[i], a[i]);
+    cmd = system(MasterToslaveTmp);
+
+    printf("Hadoop2: Copy finished! Now remove tmp data......\n");
+    snprintf(rmSlaveTmpData, 29, "rm -r /tmp/ThisMonth/%s", dirs[i]);
+    //get Month for slave i ito hadoop2's tmp
   }
-
-  last_sub_size[1] = (i-1)*sub_size[0]+1;
-  last_sub_size[2] = last_sub_size[1] + last_sub_size[0]-1;
-  MPI_Send (&last_sub_size, 3, MPI_INT, i, DATA_MSG, MPI_COMM_WORLD);
-
+  cmd = system("rm -r /tmp/ThisMonth"); //delete this project directory from hadoop2
 }
 
 void MasterPutHDFS() {
@@ -127,8 +159,8 @@ void workernode()
   for (i = start; i <= end; i++)
   {
     ptm->tm_year = 0163;
-    ptm->tm_mon = 0;
-    ptm->tm_mday = 120 + i;
+    ptm->tm_mon = 4;
+    ptm->tm_mday = i;
     mktime(ptm);
     strftime(date, 9, "%Y%m%d", ptm);
     memcpy(&year, &date[0], 4);
@@ -160,9 +192,11 @@ int main(int argc, char** argv)
   /*  master: Distribute file range.
       slaves: Get files */
   if (me == 0) {
-    printf("I am the Master of rank: %d\n", me);
-    //managernode_DistWork();
-  } else {
+    printf("I am Hadoop2 of rank: %d\n", me);
+    Manger_DistributeWork()
+  }
+
+  if (me != 0)
     workernode();
   }
   /*BARRIER ==> all documents have been downloaded*/
