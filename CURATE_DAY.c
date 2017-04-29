@@ -66,10 +66,7 @@ void workernode(int mon, int day, int st_hr, int end_hr)
 int main(int argc, char** argv)
 {
   printf("Start!\n");
-  workernode(8, 17, 6, 23);
+  workernode(5, 1, 0, 23);
   PutHDFS();
-  workernode(8, 18, 0, 5);
-  PutHDFS();
-  workernode(10, 28, 0, 23);
-  PutHDFS();
+
 }

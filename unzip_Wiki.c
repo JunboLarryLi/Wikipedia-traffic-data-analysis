@@ -26,7 +26,7 @@ int main() {
     char Test_exist[200];
 
     FILE *fptr;
-    fptr = fopen("missing_files.txt", "w");
+    fptr = fopen("missing_files2.txt", "w");
     if (fptr == NULL)
     {
       printf("Error!\n");
@@ -41,8 +41,8 @@ int main() {
       //day = 1 -> 1
       //Set up the start date
       ptm->tm_year = 115; //2015
-      ptm->tm_mon = 5; // 6
-      ptm->tm_mday = 1; // 1
+      ptm->tm_mon = 4; // 5
+      ptm->tm_mday = 2; // 1
       mktime(ptm);
       strftime(date, 9, "%Y%m%d", ptm);
       printf("date: %s\n", date);
@@ -51,7 +51,7 @@ int main() {
       memcpy(&month, &date[4], 2);
       month[2] = '\0';
 
-      for (int i = 1; i <= 214; i++)
+      for (int i = 2; i <= 31; i++)
       {
         for (int j = 0; j <= 23; j++)
         {
@@ -64,6 +64,9 @@ int main() {
             // Used for actually unzipping. Unzip from valdiv_n1's dirctory to li_j8's dictory
             snprintf(Unzip, 200 ,"hadoop fs -text /user/valdiv_n1/Wiki_Data/WikiData/%s-%s/pagecounts-%s-0%d0000.gz | hadoop fs -put - ./Wiki/%s-%s/pagecounts-%s-0%d0000.txt", year, month, date, j, year, month, date, j);
             snprintf(Delete_gz, 200 ,"hdfs dfs -rm /user/valdiv_n1/Wiki_Data/WikiData/%s-%s/pagecounts-%s-0%d0000.gz", year, month, date, j);
+            //-e: if the path exists, return 0.
+            snprintf(Test_exist, 200, "hdfs dfs -test -e /user/valdiv_n1/Wiki_Data/WikiData/%s-%s/pagecounts-%s-0%d0000.gz", year, month, date, j);
+            cmd = system(Test_exist);
           }
           else
           {
@@ -73,20 +76,11 @@ int main() {
             // Used for actually unzipping. Unzip from valdiv_n1's dirctory to li_j8's dictory
             snprintf(Unzip, 200 ,"hadoop fs -text /user/valdiv_n1/Wiki_Data/WikiData/%s-%s/pagecounts-%s-%d0000.gz | hadoop fs -put - ./Wiki/%s-%s/pagecounts-%s-%d0000.txt", year, month, date, j, year, month, date, j);
             snprintf(Delete_gz, 200 ,"hdfs dfs -rm /user/valdiv_n1/Wiki_Data/WikiData/%s-%s/pagecounts-%s-%d0000.gz", year, month, date, j);
-          }
-
-          if (j <= 9)
-          {
-            //-e: if the path exists, return 0.
-            snprintf(Test_exist, 200, "hdfs dfs -test -e /user/valdiv_n1/Wiki_Data/WikiData/%s-%s/pagecounts-%s-0%d0000.gz", year, month, date, j);
-            cmd = system(Test_exist);
-          }
-          else
-          {
             //-e: if the path exists, return 0.
             snprintf(Test_exist, 200, "hdfs dfs -test -e /user/valdiv_n1/Wiki_Data/WikiData/%s-%s/pagecounts-%s-%d0000.gz", year, month, date, j);
             cmd = system(Test_exist);
           }
+
           if (cmd == 0)
           {
             cmd = system(Unzip);
