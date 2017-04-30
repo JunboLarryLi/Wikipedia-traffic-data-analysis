@@ -15,6 +15,7 @@ write to the output file in the format of
 #include <stdio.h>
 #include <curl/curl.h>
 #include <pthread.h>
+#include <unistd.h>
 
 int cmd;
 
@@ -51,6 +52,29 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
   return size*nmemb;
 }
 
+void query_and_writeout(char * dateHR, char * views, char * bytes, char * url, FILE * out_fp)
+{
+  CURL *curl;
+  CURLcode res;
+  curl = curl_easy_init();
+  if(curl)
+  {
+    struct string s;
+    init_string(&s);
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+    res = curl_easy_perform(curl);
+    /* always cleanup */
+    curl_easy_cleanup(curl);
+    // printf("Query result:\n %s\n", s.ptr);
+    fprintf(out_fp, "%s\t%s\t%s\t%s\n", dateHR, s.ptr, views, bytes);
+    fsync(1);
+    free(s.ptr);
+  }
+}
+
 void readFiles  (char * fileName_input, char * fileName_output)
 {
     FILE * fp; // read file
@@ -70,7 +94,6 @@ void readFiles  (char * fileName_input, char * fileName_output)
       printf("Cannot open output file Error!\n");
       exit(1);
     }
-
 
     int i;
     int row_index = 1;
@@ -96,10 +119,10 @@ void readFiles  (char * fileName_input, char * fileName_output)
       e_idx_views = 0;
       s_idx_bytes = 0;
       e_idx_bytes = 0;
-      // printf("index: %d ", row_index);
+      printf("index: %d ", row_index);
       // printf("\n");
 
-      //print the line
+      //find each key variable's starting and ending indices
       while (line[i] != '\n')
       {
           if (line[i] == '\t')
@@ -162,39 +185,34 @@ void readFiles  (char * fileName_input, char * fileName_output)
       // printf("\n");
       char url[1000];
       char begin[9] = "https://";
-      snprintf(url, 1000, "%sen.wikipedia.org//w/api.php?action=query&format=xml&prop=categories&titles=%s&clshow=!hidden&cllimit=1", begin, name);
+      snprintf(url, 1000, "%sen.wikipedia.org//w/api.php?action=query&format=xml&prop=categories&titles=%s&clshow=!hidden&cllimit=10", begin, name);
       // printf("%s\n", url);
 
-      CURL *curl;
-      CURLcode res;
-
-      curl = curl_easy_init();
-      if(curl)
+      query_and_writeout(dateHR, views, bytes, url, out_fp);
+      if (row_index%50 == 0)
       {
-        struct string s;
-        init_string(&s);
-
-        curl_easy_setopt(curl, CURLOPT_URL, url);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
-        res = curl_easy_perform(curl);
-        /* always cleanup */
-        curl_easy_cleanup(curl);
-        printf("Query result:\n %s\n", s.ptr);
-        fprintf(out_fp, "%s\t%s\t%s\t%s\n", dateHR, s.ptr, views, bytes);
-        free(s.ptr);
+        fflush(out_fp); // any unwritten data in its output file is written to the buffer and clean the RAM.
       }
     }
     fclose(fp);
     fclose(out_fp);
 }
 
-int main(int argc, char** argv)
+
+// int main(int argc, char** argv)
+// {
+//   if (argc != 3) {
+//     exit(-1);
+//   } else {
+//   // argv[1]: input file
+//   // argv[2]: output file
+//   readFiles(argv[1], argv[2]);
+//   }
+//   return 0;
+// }
+
+// used for linked pthread
+extern 'C' void queryWiki(char * input, char * output)
 {
-  if (argc != 3) {
-    exit(-1);
-  } else {
-  readFiles(argv[1], argv[2]);
-  }
-  return 0;
+  readFiles(input, output);
 }
