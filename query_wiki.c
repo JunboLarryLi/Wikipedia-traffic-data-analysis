@@ -52,6 +52,7 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
   return size*nmemb;
 }
 
+// Citation of usage curl library: http://stackoverflow.com/questions/2329571/c-libcurl-get-output-into-a-string
 void query_and_writeout(char * dateHR, char * views, char * bytes, char * url, FILE * out_fp)
 {
   CURL *curl;
@@ -119,7 +120,7 @@ void readFiles  (char * fileName_input, char * fileName_output)
       e_idx_views = 0;
       s_idx_bytes = 0;
       e_idx_bytes = 0;
-      printf("index: %d ", row_index);
+      // printf("index: %d ", row_index);
       // printf("\n");
 
       //find each key variable's starting and ending indices
@@ -211,7 +212,7 @@ void readFiles  (char * fileName_input, char * fileName_output)
 //   return 0;
 // }
 
-// used for linked pthread
+used for linked pthread
 extern 'C' void queryWiki(char * input, char * output)
 {
   readFiles(input, output);
