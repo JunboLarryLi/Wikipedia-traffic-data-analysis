@@ -212,7 +212,7 @@ void readFiles  (char * fileName_input, char * fileName_output)
 //   return 0;
 // }
 
-used for linked pthread
+// used for linked pthread
 extern 'C' void queryWiki(char * input, char * output)
 {
   readFiles(input, output);
