@@ -23,8 +23,8 @@ void init(int argc, char **argv) {
 
 void Manger_DistributeWork() {
   MPI_Status status;
-  const char * a[12];
-  const char * dirs[12];
+  const char * a[nnodes-1];
+  const char * dirs[nnodes-1];
 
   a[0]="219a";
   a[1]="219b";
@@ -37,23 +37,21 @@ void Manger_DistributeWork() {
   a[8]="219i";
   a[9]="219j";
   a[10]="219k";
-  a[11]="219l";
+  //a[11]="219l";
 
   dirs[0]="2015-01";
   dirs[1]="2015-02";
   dirs[2]="2015-03";
   dirs[3]="2015-04";
-  dirs[4]="2015-05";
-  dirs[5]="2015-06";
-  dirs[6]="2015-07";
-  dirs[7]="2015-08";
-  dirs[8]="2015-09";
-  dirs[9]="2015-10";
-  dirs[10]="2015-11";
-  dirs[11]="2015-12";
-
+  dirs[4]="2015-06";
+  dirs[5]="2015-07";
+  dirs[6]="2015-08";
+  dirs[7]="2015-09";
+  dirs[8]="2015-10";
+  dirs[9]="2015-11";
+  dirs[10]="2015-12";
+  //dirs[4]="2015-05";
   int i;
-
   char getThisMonth[62];
   char makeDir[30];
   char MasterToslaveTmp[48];
@@ -85,10 +83,10 @@ void Manger_DistributeWork() {
 
 void MasterPutHDFS() {
   MPI_Status status;
-  char slaveToMaster[74];
+  char slaveToMaster[42];
   char rmSlaveTmpData[35];
 
-  const char *a[17];
+  const char *a[nnodes-1];
   a[0]="219a";
   a[1]="219b";
   a[2]="219c";
@@ -100,19 +98,19 @@ void MasterPutHDFS() {
   a[8]="219i";
   a[9]="219j";
   a[10]="219k";
-  a[11]="219l";
-  a[12]="219n";
-  a[13]="219o";
-  a[14]="219p";
-  a[15]="216g";
-  a[16]="216f";
+  // a[11]="219l";
+  // a[12]="219n";
+  // a[13]="219o";
+  // a[14]="219p";
+  // a[15]="216g";
+  // a[16]="216f";
 
   int i;
-  cmd = system("mkdir /tmp/Wiki_Data"); //make a directory in haoop2, where all operations happen here
+  cmd = system("mkdir /tmp/QueriedData"); //make a directory in haoop2, where all operations happen here
   //forloop from 1-16 missing 17
   for (i = 0; i < nnodes; i++) {
-    snprintf(slaveToMaster, 73, "scp -r %s:/tmp/WikiData/ /tmp/Wiki_Data/", a[i]);
-    snprintf(rmSlaveTmpData, 35, "ssh %s 'rm -r /tmp/WikiData/'", a[i]);
+    snprintf(slaveToMaster, 73, "scp -r 219a:/tmp/MyMonth/ /tmp/QueriedData", a[i]);
+    snprintf(rmSlaveTmpData, 35, "ssh %s 'rm -r /tmp/MyMonth/'", a[i]);
 
     printf("HELLOO this is %s.... Moving data to Hadoop2\n", a[i]);
     cmd = system(slaveToMaster);    //copy data to Hadoop2
@@ -195,6 +193,8 @@ int main(int argc, char** argv)
     printf("I am Hadoop2 of rank: %d\n", me);
     Manger_DistributeWork()
   }
+
+  MPI_Barrier(MPI_COMM_WORLD);
 
   if (me != 0)
     workernode();

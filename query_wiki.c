@@ -83,120 +83,118 @@ void readFiles  (char * fileName_input, char * fileName_output)
 
     char line[10000];
     fp = fopen(fileName_input, "r");
-    if (fp == NULL)
+    if (fp != NULL)
     {
-      printf("Cannot open read0 file Error!\n");
-      exit(1);
-    }
+      char createFile[45]; //
+      snprintf(createFile, 45, "touch %s",fileName_output);
+      int cmd = system(createFile);
 
-    out_fp = fopen(fileName_output, "w");
-    if (out_fp == NULL)
-    {
-      printf("Cannot open output file Error!\n");
-      exit(1);
-    }
-
-    int i;
-    int row_index = 1;
-    int s_idx_dateHr;
-    int e_idx_dateHr;
-    int s_idx_name;
-    int e_idx_name;
-    int s_idx_views;
-    int e_idx_views;
-    int s_idx_bytes;
-    int e_idx_bytes;
-    int num_space;
-
-    while (fgets(line, sizeof(line), fp))
-    {
-      num_space = 0;
-      i = 0;
-      s_idx_dateHr = 0;
-      e_idx_dateHr = 0;
-      s_idx_name = 0;
-      e_idx_name = 0;
-      s_idx_views = 0;
-      e_idx_views = 0;
-      s_idx_bytes = 0;
-      e_idx_bytes = 0;
-      // printf("index: %d ", row_index);
-      // printf("\n");
-
-      //find each key variable's starting and ending indices
-      while (line[i] != '\n')
+      out_fp = fopen(fileName_output, "w");
+      if (out_fp != NULL)
       {
-          if (line[i] == '\t')
+        int i;
+        int row_index = 1;
+        int s_idx_dateHr;
+        int e_idx_dateHr;
+        int s_idx_name;
+        int e_idx_name;
+        int s_idx_views;
+        int e_idx_views;
+        int s_idx_bytes;
+        int e_idx_bytes;
+        int num_space;
+
+        while (fgets(line, sizeof(line), fp))
+        {
+          num_space = 0;
+          i = 0;
+          s_idx_dateHr = 0;
+          e_idx_dateHr = 0;
+          s_idx_name = 0;
+          e_idx_name = 0;
+          s_idx_views = 0;
+          e_idx_views = 0;
+          s_idx_bytes = 0;
+          e_idx_bytes = 0;
+          // printf("index: %d ", row_index);
+          // printf("\n");
+
+          //find each key variable's starting and ending indices
+          while (line[i] != '\n')
           {
-            e_idx_dateHr = i-1;
+              if (line[i] == '\t')
+              {
+                e_idx_dateHr = i-1;
+              }
+              if (line[i] == ' ')
+              {
+                  num_space += 1;
+                  if (num_space == 1)
+                  {
+                      s_idx_name = i+1;
+                  }
+                  else if (num_space == 2)
+                  {
+                      e_idx_name = i-1;
+                      s_idx_views = i+1;
+                  }
+                  else
+                  {
+                      e_idx_views = i-1;
+                      s_idx_bytes = i+1;
+                  }
+              }
+              i+=1;
           }
-          if (line[i] == ' ')
+          e_idx_bytes = i-1;
+          row_index += 1;
+
+          char* cat = "<categories>";
+          char* _cat = "</categories>";
+          char* page_id = "<page _idx=\"";
+          char* title_idx = "title=\"Category:";
+
+          int len_dateHR = e_idx_dateHr - s_idx_dateHr + 1;
+          int len_name = e_idx_name - s_idx_name + 1;
+          int len_views = e_idx_views - s_idx_views + 1;
+          int len_bytes = e_idx_bytes - s_idx_bytes + 1;
+
+          char dateHR[len_dateHR + 1];
+          char name[len_name + 1];
+          char views[len_views+ 1];
+          char bytes[len_bytes+ 1];
+
+          // printf("\n");
+          memcpy(dateHR, &line[s_idx_dateHr], len_dateHR);
+          memcpy(name, &line[s_idx_name], len_name);
+          memcpy(views, &line[s_idx_views], len_views);
+          memcpy(bytes, &line[s_idx_bytes], len_bytes);
+          dateHR[len_dateHR] = '\0';
+          name[len_name]= '\0';
+          views[len_views]= '\0';
+          bytes[len_bytes]= '\0';
+
+          // printf("Begin: \n");
+          // printf("%s\n", dateHR);
+          // printf("%s\n", name);
+          // printf("%s\n", views);
+          // printf("%s\n", bytes);
+          // printf("\n");
+          char url[1000];
+          char begin[9] = "https://";
+          snprintf(url, 1000, "%sen.wikipedia.org//w/api.php?action=query&format=xml&prop=categories&titles=%s&clshow=!hidden&cllimit=10", begin, name);
+          // printf("%s\n", url);
+
+          query_and_writeout(dateHR, views, bytes, url, out_fp);
+          if (row_index%50 == 0)
           {
-              num_space += 1;
-              if (num_space == 1)
-              {
-                  s_idx_name = i+1;
-              }
-              else if (num_space == 2)
-              {
-                  e_idx_name = i-1;
-                  s_idx_views = i+1;
-              }
-              else
-              {
-                  e_idx_views = i-1;
-                  s_idx_bytes = i+1;
-              }
+            fflush(out_fp); // any unwritten data in its output file is written to the buffer and clean the RAM.
           }
-          i+=1;
+        }
+        fclose(out_fp);
       }
-      e_idx_bytes = i-1;
-      row_index += 1;
-
-      char* cat = "<categories>";
-      char* _cat = "</categories>";
-      char* page_id = "<page _idx=\"";
-      char* title_idx = "title=\"Category:";
-
-      int len_dateHR = e_idx_dateHr - s_idx_dateHr + 1;
-      int len_name = e_idx_name - s_idx_name + 1;
-      int len_views = e_idx_views - s_idx_views + 1;
-      int len_bytes = e_idx_bytes - s_idx_bytes + 1;
-
-      char dateHR[len_dateHR + 1];
-      char name[len_name + 1];
-      char views[len_views+ 1];
-      char bytes[len_bytes+ 1];
-
-      // printf("\n");
-      memcpy(dateHR, &line[s_idx_dateHr], len_dateHR);
-      memcpy(name, &line[s_idx_name], len_name);
-      memcpy(views, &line[s_idx_views], len_views);
-      memcpy(bytes, &line[s_idx_bytes], len_bytes);
-      dateHR[len_dateHR] = '\0';
-      name[len_name]= '\0';
-      views[len_views]= '\0';
-      bytes[len_bytes]= '\0';
-
-      // printf("Begin: \n");
-      // printf("%s\n", dateHR);
-      // printf("%s\n", name);
-      // printf("%s\n", views);
-      // printf("%s\n", bytes);
-      // printf("\n");
-      char url[1000];
-      char begin[9] = "https://";
-      snprintf(url, 1000, "%sen.wikipedia.org//w/api.php?action=query&format=xml&prop=categories&titles=%s&clshow=!hidden&cllimit=10", begin, name);
-      // printf("%s\n", url);
-
-      query_and_writeout(dateHR, views, bytes, url, out_fp);
-      if (row_index%50 == 0)
-      {
-        fflush(out_fp); // any unwritten data in its output file is written to the buffer and clean the RAM.
-      }
+      fclose(fp);
     }
-    fclose(fp);
-    fclose(out_fp);
 }
 
 
@@ -213,7 +211,7 @@ void readFiles  (char * fileName_input, char * fileName_output)
 // }
 
 // used for linked pthread
-extern 'C' void queryWiki(char * input, char * output)
+extern void queryWiki(char * input, char * output)
 {
   readFiles(input, output);
 }
