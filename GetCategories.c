@@ -19,7 +19,7 @@ int me; // node's rank
 int recv_buff[3];
 int cmd;
 
-void MultiThreadQuery(char * directory, int ThreadNum);
+void MultiThreadQuery(char * directory, int ThreadNum, int rank); // need to declare this in order to extern function
 
 void init(int argc, char **argv) {
   MPI_Init(&argc, &argv);
@@ -60,24 +60,27 @@ void Manger_DistributeWork() {
   int i;
   char getThisMonth[63];
   char makeDir[30];
-  char makeOutputDir[42];
+  char makeOutputDir[35];
+  char makeOutputMon[42];
   char MasterToslaveTmp[48];
   char rmSlaveTmpData[29];
 
   printf("Hello, I am hadoop2. I am making a directory in Tmp.....\n");
   cmd = system("mkdir /tmp/ThisMonth"); //make a directory in haoop2, where all operations happen here
 
-  for (i = 0; i < nnodes-1; i++)
+  for (i = 1; i < nnodes-1; i++)
   {
     printf("Hadoop2: Getting %s from HDFS......\n", dirs[i]);
     snprintf(getThisMonth, 63, "hdfs dfs -get /user/valdiv_n1/cleanWiki/%s /tmp/ThisMonth", dirs[i]); //hdfs dfs -get /user/valdiv_n1/cleanWiki/2015-XX /tmp/ThisMonth
     cmd = system(getThisMonth);  //move data to hadoop2
     //**********************************
-    printf("%s: Creating Dir in tmp......\n", a[i]);
+    printf("%s: Creating Dirs in tmp......\n", a[i]);
     snprintf(makeDir, 30, "ssh %s 'mkdir /tmp/MyMonth'" , a[i]);  //ssh 219x 'mkdir /tmp/MyMonth'
-    snprintf(makeOutputDir, 42, "ssh %s 'mkdir /tmp/MyMonth_out/%s'" , a[i], dirs[i]); //ssh 219x 'mkdir /tmp/MyMonth_out/2015-XX'
-    cmd = system(makeDir);    //copy data to Hadoop2
-    cmd = system(makeOutputDir);    //copy data to Hadoop2
+    snprintf(makeOutputDir, 35, "ssh %s 'mkdir /tmp/MyMonth_out'" , a[i]); //ssh 219x 'mkdir /tmp/MyMonth_out'
+    snprintf(makeOutputMon, 42, "ssh %s 'mkdir /tmp/MyMonth_out/%s'" , a[i], dirs[i]); //ssh 219x 'mkdir /tmp/MyMonth_out/2015-XX'
+    cmd = system(makeDir);    //make MyMonth
+    cmd = system(makeOutputDir);    //make MyMonth_out
+    cmd = system(makeOutputMon);    //make MyMonth_out
     //**********************************
     printf("Hadoop2: Sending data to %s......\n", a[i]);
     snprintf(MasterToslaveTmp, 48, "scp -r /tmp/ThisMonth/%s %s:/tmp/MyMonth/",dirs[i], a[i]);
@@ -85,6 +88,7 @@ void Manger_DistributeWork() {
 
     printf("Hadoop2: Copy finished! Now remove tmp data......\n");
     snprintf(rmSlaveTmpData, 29, "rm -r /tmp/ThisMonth/%s", dirs[i]); //rm -r /tmp/ThisMonth/2015-XX
+    cmd = system(rmSlaveTmpData);  //move data to hadoop2
     //get Month for slave i ito hadoop2's tmp
   }
   cmd = system("rm -r /tmp/ThisMonth"); //delete this project directory from hadoop2
@@ -166,7 +170,7 @@ void workernode()
   dirs[9]="2015-11";
   dirs[10]="2015-12";
   printf("Wokred node %d: Quering Wikipedia......\n", me);
-  MultiThreadQuery(dirs[me-1], 4);
+  MultiThreadQuery(dirs[me-1], 8, me);
 }
 
 int main(int argc, char** argv)
@@ -175,17 +179,17 @@ int main(int argc, char** argv)
   init(argc, argv);
   /*  master: Distribute file range.
       slaves: Get files */
-  if (me == 0) {
-    printf("Hadoop2 (me=%d): Distribute Data\n", me);
-    Manger_DistributeWork();
-  }
-  MPI_Barrier(MPI_COMM_WORLD);
-
+  // if (me == 0) {
+  //   printf("Hadoop2 (me=%d): Distribute Data\n", me);
+  //   Manger_DistributeWork();
+  // }
+  // MPI_Barrier(MPI_COMM_WORLD);ZZsz
   if (me != 0) {
     workernode();
   }
   /*BARRIER ==> all documents have been downloaded*/
   MPI_Barrier(MPI_COMM_WORLD);
+  printf("upto here BROOOOOOOOOOOOOOOO! %d\n", me);
   /* Get files into Hadoop and put them into HDFS*/
   if (me == 0) {
     MasterPutHDFS();

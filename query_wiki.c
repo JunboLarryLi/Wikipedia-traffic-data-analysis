@@ -18,6 +18,7 @@ write to the output file in the format of
 #include <unistd.h>
 
 int cmd;
+int me;
 
 struct string
 {
@@ -85,13 +86,16 @@ void readFiles  (char * fileName_input, char * fileName_output)
     fp = fopen(fileName_input, "r");
     if (fp != NULL)
     {
+      printf("Opening %s from 219 node NO.%d\n", fileName_input, me);
       char createFile[45]; //
       snprintf(createFile, 45, "touch %s",fileName_output);
       int cmd = system(createFile);
 
+
       out_fp = fopen(fileName_output, "w");
       if (out_fp != NULL)
       {
+        // printf("HERE %s from 219 node NO.%d\n", fileName_input, me);
         int i;
         int row_index = 1;
         int s_idx_dateHr;
@@ -186,14 +190,19 @@ void readFiles  (char * fileName_input, char * fileName_output)
           // printf("%s\n", url);
 
           query_and_writeout(dateHR, views, bytes, url, out_fp);
+          //fflush(out_fp); // any unwritten data in its output file is written to the buffer and clean the RAM.
           if (row_index%50 == 0)
           {
-            fflush(out_fp); // any unwritten data in its output file is written to the buffer and clean the RAM.
+             fflush(out_fp); // any unwritten data in its output file is written to the buffer and clean the RAM.
           }
         }
         fclose(out_fp);
       }
       fclose(fp);
+      printf("Read Complete. Deleting %s\n", fileName_input);
+      char delete[40];
+      snprintf(delete, 40, "rm %s", fileName_input); // /tmp/MyMonth/2015-0XX/part-r-00017
+      cmd = system(delete);
     }
 }
 
@@ -211,7 +220,8 @@ void readFiles  (char * fileName_input, char * fileName_output)
 // }
 
 // used for linked pthread
-extern void queryWiki(char * input, char * output)
+extern void queryWiki(char * input, char * output, int rank)
 {
+  me = rank;
   readFiles(input, output);
 }

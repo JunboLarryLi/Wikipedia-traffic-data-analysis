@@ -1,3 +1,7 @@
+// gcc -c thread_wiki.c -o threadQuery.o -std=c11 -lpthread
+// gcc -c query_wiki.c -o queryWiki.o -std=c11 -lcurl
+// gcc -o program threadQuery.o queryWiki.o -lpthread -lcurl
+// ./program 8 2015-12
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +14,8 @@
 pthread_mutex_t Tlock;      //declare lock
 WorkQueue_t * WorkPool;
 char * dir = NULL;
-void queryWiki(char * input, char * output);
+void queryWiki(char * input, char * output, int rank); //// need to declare this in order to extern function
+int me;
 
 // Target function
 void * dowork (void * voidtdata)
@@ -39,14 +44,16 @@ void * dowork (void * voidtdata)
       //creating appropiate input path into tmp
       snprintf(inputFile, 35, "/tmp/MyMonth/%s/%s", dir, fileName); ///tmp/MyMonth/2015-02/part-r-00000
 
-      queryWiki(inputFile, OutFile);
+      queryWiki(inputFile, OutFile, me);
+      free(OutFile);
+      free(inputFile);
     }
     mydata->flag = 0;
   }
 }
 
 // Parallel Helper --> initializer can callee
-void GetCategoriesParallel (int p, char * dir)
+void GetCategoriesParallel (int p, char * dir, int rank)
 {
   // Declaration and initialization of variables
   int i, j, n, rc, node;
@@ -83,6 +90,7 @@ void GetCategoriesParallel (int p, char * dir)
   for (i = 0; i < p; i++) {
     Threa_Data[i].ID = i;
     Threa_Data[i].flag = 0;
+    Threa_Data[i].rank = rank;
   }
   pthread_mutex_init(&Tlock, NULL);
   for (i = 0; i < p; i++) {
@@ -102,16 +110,19 @@ void GetCategoriesParallel (int p, char * dir)
   return;
 }
 
-extern void MultiThreadQuery(char * directory, int ThreadNum)
+// extern void MultiThreadQuery(char * directory, int ThreadNum, int rank)
+int main(int argc, char ** argv)
 {
+  me = 2;
   int n = 60;
-  int nthreads = ThreadNum;
-  dir = directory;
+  int nthreads = atoi(argv[1]);
+  // dir = directory;
+  dir = argv[2];
   WorkPool = (WorkQueue_t *)malloc( sizeof(WorkQueue_t) );
   WorkPool->Queue = (char * *)malloc((n-1) * sizeof(char *));
   WorkPool->idx_txtAvailable = -1;
   WorkPool->len = 0;
-  GetCategoriesParallel(nthreads, dir);
+  GetCategoriesParallel(nthreads, dir, me);
   for (int i = 0; i < WorkPool->len; i++) {
     free(WorkPool->Queue[i]);
   }
