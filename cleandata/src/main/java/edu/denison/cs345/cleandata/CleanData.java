@@ -1,21 +1,11 @@
 /*
  Description:
- In this file, we mainly calculated the percentage of party-line for each year.
-
- In stage 1:
- mapper <year.rollNum, PartyVote>   --->>    Reducer <year.rollNum, if_partyline>
-
- In stage 2:
- mapper <year, if_partyline>    --->>  Reducer <year, percentage>
-
- We can see two stages' outputs from:
- http://w01:50070/explorer.html#/user/li_j8/PartyLine
-
- Run:
- hadoop jar target/partyline-1.0-SNAPSHOT.jar /user/valdiv_n1/partyLine/* ./PartyLine/stage1_output ./PartyLine/stage2_output
- hadoop jar target/cleandata-1.0-SNAPSHOT.jar /user/valdiv_n1/TESTWIKI/INPUT/Wiki/2015-01/ /user/valdiv_n1/TESTWIKI/OUTPUT
+          In this file, we wrote a simpe mapreduce job to get rid of the
+          rows that are non-english rows.
  */
-// hadoop jar target/cleandata-1.0-SNAPSHOT.jar ./Wiki/2015-01/pagecounts-2015010* /user/valdiv_n1/cleanWiki/2015-01/01_09
+
+// Compile instructions:
+// There is a script to run the job. The scipt is located at the first level of the directory, named as cleanDataScript.
 
 
 package edu.denison.cs345.cleandata;

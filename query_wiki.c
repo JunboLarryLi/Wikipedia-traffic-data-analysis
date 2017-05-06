@@ -1,15 +1,13 @@
-//gcc -o query_wiki query_wiki.c -std=c99 -lcurl
-//./query_wiki ~/Downloads/part-r-00017 ~/hello.txt
-
 /*
 Description:
-
 This file will take the cleaned wiki data file as input, and query the wikipedia API to get the corresponding MPI page, then
 write to the output file in the format of
 
             dateHR \t queried_result \t views \t bytes
-
 */
+
+// Compile instrucitons:
+//    Please refer to the file GetCategories.c for compiling instructions
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

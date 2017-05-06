@@ -1,4 +1,11 @@
-// Description: This file works for downloading the data from wikimedia traffic data by using MPI
+/*
+ Description:
+          This is the part of Job 1 in our entire final project.
+          This file contains the script of the data movement from HDFS to hadoop2 to 219 machines,
+          plus having each slave node to call the extern function MultiThreadQuery from thread-wiki.c
+ */
+
+// Compile instrucitons:
 // mpicc -c GetCategories.c -o GetCategories.o
 // gcc -c thread_wiki.c -o thread_wiki.o -std=c11 -lpthread
 // gcc -c query_wiki.c -o query_wiki.o -std=c11 -lcurl

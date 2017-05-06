@@ -1,13 +1,27 @@
-// Description: This file works for downloading the data from wikimedia traffic data by using MPI
 /*
-gcc -o unzip_Wiki unzip_Wiki.c -std=c99
-./unzip_Wiki
+Description:
+          This file is a script that runs the command line of unzipping the raw .gz data from the HDFS.
+          In detail, the input is a time-span, in which the user can indicate the time span
+          that they want to unzip. If some .gz files are missing, it will write out a .txt file
+          to indicate the missing dates.
+Update:
+        We realize that this may not be most effective way to do so, because essentially, we were sending
+        the data from HDFS to the namenode hadoop2 to execute the unzip, and then transfer it back to
+        HDFS.
+
+        One possible future improvment will be use MPI to unzip locally and then tranfer the unzipped data
+        to the HDFS.
 */
+
+//Compile snstruction:
+
+//gcc -o unzip_Wiki unzip_Wiki.c -std=c99
+//./unzip_Wiki
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-//#include <mpi.h>
 
 int main() {
     //start at 0153.11.9  --> 2007/12/09
@@ -70,12 +84,14 @@ int main() {
           }
           else
           {
+            // Used for testing. Unzip from li_j8's dirctory to li_j8's dictory
             // snprintf(Unzip, 200 ,"hadoop fs -text ./Wiki/%s-%s/pagecounts-%s-%d0000.gz | hadoop fs -put - ./Wiki/%s-%s/pagecounts-%s-%d0000.txt", year, month, date, j, year, month, date, j);
             // snprintf(Delete_gz, 200 ,"hdfs dfs -rm ./Wiki/%s-%s/pagecounts-%s-%d0000.gz", year, month, date, j);
 
             // Used for actually unzipping. Unzip from valdiv_n1's dirctory to li_j8's dictory
             snprintf(Unzip, 200 ,"hadoop fs -text /user/valdiv_n1/Wiki_Data/WikiData/%s-%s/pagecounts-%s-%d0000.gz | hadoop fs -put - ./Wiki/%s-%s/pagecounts-%s-%d0000.txt", year, month, date, j, year, month, date, j);
             snprintf(Delete_gz, 200 ,"hdfs dfs -rm /user/valdiv_n1/Wiki_Data/WikiData/%s-%s/pagecounts-%s-%d0000.gz", year, month, date, j);
+
             //-e: if the path exists, return 0.
             snprintf(Test_exist, 200, "hdfs dfs -test -e /user/valdiv_n1/Wiki_Data/WikiData/%s-%s/pagecounts-%s-%d0000.gz", year, month, date, j);
             cmd = system(Test_exist);

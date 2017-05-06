@@ -1,4 +1,12 @@
-// Description: This file works for downloading the data from wikimedia traffic data by using MPI
+/*
+Description: This file is a scropt that runs the command line to download the data from wikimedia traffic data by using MPI.
+              We used 16 of the 219 Linux machines from Olin Hall, Denison University as our worker node,
+              and hadoop2 from Dr. Brssoud's office as the master node.
+              Please see the attached hosts file.
+              This link is where the dataset is located: https://dumps.wikimedia.org/other/pagecounts-raw/.
+*/
+//Compile instructions:
+
 //mpicc -g -o getWiki_data getWiki_data.c
 //mpiexec -f hosts -n 17 ./getWiki_data
 

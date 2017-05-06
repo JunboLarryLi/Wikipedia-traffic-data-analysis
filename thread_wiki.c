@@ -1,7 +1,12 @@
-// gcc -c thread_wiki.c -o threadQuery.o -std=c11 -lpthread
-// gcc -c query_wiki.c -o queryWiki.o -std=c11 -lcurl
-// gcc -o program threadQuery.o queryWiki.o -lpthread -lcurl
-// ./program 8 2015-12
+/*
+ Description:
+          This is the part of Job 1 in our entire final project.
+          This file contains the script of creating 8 threads,
+          plus having each thread to call the extern function queryWiki(inputFile, OutFile, me) from query_wiki.c
+ */
+
+// Compile instrucitons:
+//    Please refer to the file GetCategories.c for compiling instructions
 
 #include <stdio.h>
 #include <stdlib.h>
